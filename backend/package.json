@@ -1,0 +1,19 @@
+{
+  "name": "sun-techscope",
+  "version": "1.0.0",
+  "private": true,
+  "description": "科技视界 TechScope - 全栈课程项目（Node.js + Express + MySQL）",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "init:db": "node init/SUN_initDb.js"
+  },
+  "author": "孙跃铭",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5"
+  }
+}

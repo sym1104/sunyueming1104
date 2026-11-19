@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+  姓名：孙跃铭 | 学号：24001011104 | 时间：2026-11-19 | 大模型：豆包大模型（Doubao）
+  页面说明：数据库连接测试页。输入用户名与密码，调用 POST /api/database/test 检测 MySQL。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>数据库连接测试 · 科技视界 TechScope</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1622'/%3E%3Cpath d='M7 20L13 10L19 22L25 12' stroke='%233fd8bf' stroke-width='2.4' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/SUN_common.css">
+</head>
+<body>
+
+  <header class="SUN_topbar">
+    <div class="SUN_shell SUN_topbar-inner">
+      <a class="SUN_brand" href="index.html">
+        <span class="SUN_brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 16L8 7L13 18L19 8" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        <span>
+          <span class="SUN_brand-name">科技视界 TechScope</span><br>
+          <span class="SUN_brand-sub">Full-Stack Course Project</span>
+        </span>
+      </a>
+      <nav class="SUN_topnav" aria-label="页面导航">
+        <a class="SUN_topnav-link" href="index.html">首页</a>
+        <a class="SUN_topnav-link SUN_active" href="database.html">数据库测试</a>
+        <a class="SUN_topnav-link" href="news.html">科技新闻</a>
+        <a class="SUN_topnav-link" href="gallery.html">图文列表</a>
+      </nav>
+      <span class="SUN_student-chip">姓名 <b>孙跃铭</b> · 学号 <b>24001011104</b></span>
+    </div>
+  </header>
+
+  <main>
+    <div class="SUN_page-head">
+      <div class="SUN_shell">
+        <span class="SUN_kicker">Database</span>
+        <h1 class="SUN_page-title">数据库连接测试</h1>
+        <p class="SUN_page-desc">
+          填写 MySQL 用户名与密码，点击“连接数据库”调用后端接口完成一次真实连接。
+          成功时会返回服务版本、目标库与数据表清单，失败时会给出可读的原因。
+        </p>
+
+        <div class="SUN_api-bar">
+          <span class="SUN_method">POST</span>
+          <span class="SUN_api-url" id="SUN_dbApiUrl">http://localhost:8325/api/database/test</span>
+          <button class="SUN_copy-btn" type="button" data-SUN-copy="http://localhost:8325/api/database/test">复制接口</button>
+          <span class="SUN_api-hint">JSON 请求体</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="SUN_shell SUN_db-layout">
+      <!-- 左：连接表单 -->
+      <section class="SUN_panel" aria-label="数据库连接表单">
+        <div class="SUN_panel-head">
+          <h2 class="SUN_panel-title">连接参数</h2>
+          <span class="SUN_api-hint">MySQL 8.0</span>
+        </div>
+        <div class="SUN_panel-body">
+          <form id="SUN_dbForm" novalidate>
+            <div class="SUN_field">
+              <label class="SUN_field-label" for="SUN_dbUser">用户名</label>
+              <input class="SUN_input" id="SUN_dbUser" name="SUN_user" type="text"
+                     value="root" autocomplete="username" spellcheck="false" required>
+            </div>
+
+            <div class="SUN_field">
+              <label class="SUN_field-label" for="SUN_dbPassword">密码</label>
+              <input class="SUN_input" id="SUN_dbPassword" name="SUN_password" type="password"
+                     value="root" autocomplete="current-password" required>
+            </div>
+
+            <div class="SUN_field">
+              <label class="SUN_field-label" for="SUN_dbHost">主机</label>
+              <input class="SUN_input" id="SUN_dbHost" type="text" value="127.0.0.1:3306" readonly>
+            </div>
+
+            <div class="SUN_field">
+              <label class="SUN_field-label" for="SUN_dbName">目标数据库</label>
+              <input class="SUN_input" id="SUN_dbName" type="text" value="sun_tech_db" readonly>
+            </div>
+
+            <div class="SUN_form-actions">
+              <button class="SUN_btn SUN_btn-primary" id="SUN_dbSubmit" type="submit">连接数据库</button>
+              <button class="SUN_btn SUN_btn-ghost" id="SUN_dbReset" type="button">重置</button>
+            </div>
+
+            <p class="SUN_form-note">
+              测试页默认用户名 root、密码 root；项目实际连接读取 <code>backend/.env</code> 中的
+              DB_USER / DB_PASSWORD（凭据不写进代码）。两处不一致时，以 .env 为准。
+            </p>
+          </form>
+        </div>
+      </section>
+
+      <!-- 右：连接结果 -->
+      <div>
+        <section class="SUN_panel" aria-label="连接结果">
+          <div class="SUN_panel-head">
+            <h2 class="SUN_panel-title">连接结果</h2>
+            <span class="SUN_api-hint" id="SUN_dbCost">尚未测试</span>
+          </div>
+          <div class="SUN_panel-body">
+            <div class="SUN_status" id="SUN_dbStatus">
+              <span class="SUN_status-dot" aria-hidden="true"></span>
+              <div>
+                <p class="SUN_status-title" id="SUN_dbStatusTitle">未连接</p>
+                <p class="SUN_status-text" id="SUN_dbStatusText">输入用户名与密码后点击“连接数据库”。</p>
+              </div>
+            </div>
+
+            <div class="SUN_kv-grid" id="SUN_dbDetails">
+              <div class="SUN_kv"><span class="SUN_kv-key">服务器版本</span><span class="SUN_kv-val" data-SUN-field="version">—</span></div>
+              <div class="SUN_kv"><span class="SUN_kv-key">主机名</span><span class="SUN_kv-val" data-SUN-field="server">—</span></div>
+              <div class="SUN_kv"><span class="SUN_kv-key">连接地址</span><span class="SUN_kv-val" data-SUN-field="host">—</span></div>
+              <div class="SUN_kv"><span class="SUN_kv-key">目标数据库</span><span class="SUN_kv-val" data-SUN-field="database">—</span></div>
+              <div class="SUN_kv"><span class="SUN_kv-key">数据库存在</span><span class="SUN_kv-val" data-SUN-field="exists">—</span></div>
+              <div class="SUN_kv"><span class="SUN_kv-key">数据表数量</span><span class="SUN_kv-val" data-SUN-field="tables">—</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="SUN_panel" style="margin-top: 20px;" aria-label="接口原始返回">
+          <div class="SUN_panel-head">
+            <h2 class="SUN_panel-title">接口返回内容</h2>
+            <span class="SUN_api-hint">统一格式 { code, msg, data }</span>
+          </div>
+          <div class="SUN_panel-body">
+            <pre class="SUN_code" id="SUN_dbRaw">等待请求……
+{
+  "code": 0,
+  "msg": "提示信息",
+  "data": {}
+}</pre>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="SUN_footer">
+    <div class="SUN_shell SUN_footer-inner">
+      <span>© 2026 <b>孙跃铭</b> · 学号 <b>24001011104</b> · 科技视界 TechScope</span>
+      <span>数据库测试接口：<b>/api/database/test</b></span>
+    </div>
+  </footer>
+
+  <script src="js/SUN_common.js"></script>
+  <script src="js/SUN_database.js"></script>
+</body>
+</html>

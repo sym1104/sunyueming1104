@@ -1046,6 +1046,263 @@ a {
   }
 }
 
+/* ========== AI 对话 ========== */
+.SUN_chat-layout {
+  display: grid;
+  gap: 20px;
+  padding-top: 34px;
+}
+@media (min-width: 1024px) {
+  .SUN_chat-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.SUN_chat-main {
+  display: flex;
+  flex-direction: column;
+  height: min(78vh, 760px);
+  min-height: 560px;
+  border-radius: 16px;
+  border: 1px solid var(--SUN-line);
+  background: rgba(10, 18, 29, 0.75);
+  overflow: hidden;
+}
+.SUN_chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--SUN-line);
+}
+.SUN_chat-head-left { display: flex; align-items: center; gap: 12px; }
+.SUN_chat-title { margin: 0; font-size: 15px; font-weight: 700; }
+.SUN_chat-status { font-family: var(--SUN-mono); font-size: 11px; color: var(--SUN-dim); }
+.SUN_chat-status-busy { color: var(--SUN-warm); }
+.SUN_chat-status-err { color: var(--SUN-danger); }
+
+.SUN_chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: linear-gradient(180deg, rgba(19, 30, 45, 0.4), transparent 45%);
+}
+.SUN_chat-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.SUN_chat-msg-user { flex-direction: row-reverse; }
+.SUN_chat-avatar {
+  flex: 0 0 34px;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  border: 1px solid rgba(63, 216, 191, 0.35);
+  background: var(--SUN-accent-soft);
+  color: var(--SUN-accent);
+  font-size: 12px; font-weight: 700;
+}
+.SUN_chat-msg-user .SUN_chat-avatar {
+  border-color: rgba(242, 166, 90, 0.4);
+  background: rgba(242, 166, 90, 0.12);
+  color: var(--SUN-warm);
+}
+.SUN_chat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: min(82%, 680px);
+}
+.SUN_chat-msg-user .SUN_chat-body { align-items: flex-end; }
+.SUN_chat-name { font-size: 11px; letter-spacing: 0.04em; color: var(--SUN-dim); }
+.SUN_chat-bubble {
+  padding: 11px 15px;
+  border-radius: 4px 12px 12px 12px;
+  border: 1px solid var(--SUN-line);
+  background: #0b1420;
+  color: var(--SUN-text);
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.SUN_chat-msg-user .SUN_chat-bubble {
+  border-radius: 12px 4px 12px 12px;
+  border-color: rgba(242, 166, 90, 0.32);
+  background: rgba(242, 166, 90, 0.09);
+}
+.SUN_chat-bubble-err {
+  border-color: rgba(255, 107, 107, 0.42);
+  background: rgba(255, 107, 107, 0.08);
+  color: #ffb9b9;
+}
+
+.SUN_chat-typing {
+  display: inline-flex; gap: 5px; height: 18px; align-items: center;
+}
+.SUN_chat-typing i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--SUN-accent);
+  animation: SUN_chat-bounce 1.05s ease-in-out infinite;
+}
+.SUN_chat-typing i:nth-child(2) { animation-delay: 0.14s; }
+.SUN_chat-typing i:nth-child(3) { animation-delay: 0.28s; }
+@keyframes SUN_chat-bounce {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-4px); }
+}
+
+.SUN_chat-suggest {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 0 22px 12px;
+}
+.SUN_chat-suggest .SUN_chip { font-size: 12px; padding: 5px 12px; }
+
+.SUN_chat-composer {
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--SUN-line);
+  background: rgba(10, 16, 25, 0.6);
+}
+.SUN_chat-input {
+  display: block; width: 100%;
+  min-height: 84px; max-height: 220px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--SUN-line-strong);
+  background: #0a121d;
+  color: var(--SUN-text);
+  font-family: inherit; font-size: 14px; line-height: 1.7;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.SUN_chat-input:focus {
+  border-color: var(--SUN-accent);
+  box-shadow: 0 0 0 3px rgba(63, 216, 191, 0.12);
+}
+.SUN_chat-input::placeholder { color: var(--SUN-dim); }
+.SUN_chat-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 10px;
+}
+.SUN_chat-count { font-family: var(--SUN-mono); font-size: 12px; color: var(--SUN-dim); }
+.SUN_chat-actions .SUN_btn { min-height: 40px; padding: 0 24px; font-size: 14px; }
+
+@media (max-width: 639px) {
+  .SUN_chat-body { max-width: 86%; }
+  .SUN_chat-bubble { font-size: 13px; }
+  .SUN_chat-main { height: calc(100vh - 220px); min-height: 440px; }
+}
+
+/* ========== 知识库 RAG ========== */
+.SUN_rag-layout {
+  display: grid;
+  gap: 22px;
+  padding-top: 34px;
+  grid-template-columns: 340px minmax(0, 1fr);
+}
+@media (max-width: 1023px) {
+  .SUN_rag-layout { grid-template-columns: 1fr; }
+}
+.SUN_rag-side { display: flex; flex-direction: column; gap: 18px; }
+.SUN_rag-main { min-width: 0; }
+
+/* 上传 */
+.SUN_upload-drop {
+  display: block;
+  padding: 28px 20px;
+  border-radius: 12px;
+  border: 2px dashed var(--SUN-line-strong);
+  background: rgba(10, 18, 29, 0.55);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, transform 0.18s;
+  color: var(--SUN-muted);
+}
+.SUN_upload-drop:hover,
+.SUN_upload-drop.SUN_drag {
+  border-color: var(--SUN-accent);
+  background: rgba(63, 216, 191, 0.08);
+  color: var(--SUN-text);
+}
+.SUN_upload-drop input { display: none; }
+.SUN_upload-icon {
+  font-size: 32px;
+  color: var(--SUN-accent);
+  margin-bottom: 4px;
+}
+.SUN_upload-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--SUN-dim);
+}
+.SUN_upload-status {
+  margin-top: 10px;
+  font-family: var(--SUN-mono);
+  font-size: 11px;
+  color: var(--SUN-dim);
+}
+
+/* 文件列表 */
+.SUN_file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.SUN_file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--SUN-line);
+  background: rgba(11, 20, 32, 0.5);
+}
+.SUN_file-info {
+  min-width: 0;
+  flex: 1;
+}
+.SUN_file-info b {
+  font-size: 13px;
+  font-weight: 600;
+  display: block;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.SUN_file-info span {
+  font-family: var(--SUN-mono);
+  font-size: 11px;
+  color: var(--SUN-dim);
+}
+
+/* RAG 来源标注 */
+.SUN_rag-sources {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--SUN-mono);
+  font-size: 11px;
+  color: var(--SUN-dim);
+  background: rgba(63, 216, 191, 0.05);
+  border-left: 2px solid var(--SUN-accent);
+}
+
+/* 危险按钮 */
+.SUN_btn-danger {
+  border-color: rgba(255, 107, 107, 0.35) !important;
+  color: #ff9c9c !important;
+}
+
 /* 动效降级 */
 @media (prefers-reduced-motion: reduce) {
   * {

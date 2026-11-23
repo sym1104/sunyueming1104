@@ -153,3 +153,57 @@ SHOW CREATE TABLE `SUN_gallery`;
 ```
 
 > 也可以直接运行项目内脚本：`cd backend && node init/SUN_initDb.js`，脚本会读取 `.env` 自动完成上述全部操作。
+
+---
+
+## 5. 知识库 RAG 表（2026-11-23 16:30）
+
+### 5.1 SUN_knowledge_file — 原始文件元数据
+
+```sql
+CREATE TABLE `SUN_knowledge_file` (
+  `SUN_id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `SUN_name`          VARCHAR(200) NOT NULL DEFAULT '',
+  `SUN_original_name` VARCHAR(200) NOT NULL DEFAULT '',
+  `SUN_ext`           VARCHAR(20)  NOT NULL DEFAULT '',
+  `SUN_size`          INT UNSIGNED NOT NULL DEFAULT 0,
+  `SUN_path`          VARCHAR(500) NOT NULL DEFAULT '',
+  `SUN_chunk_count`   INT UNSIGNED NOT NULL DEFAULT 0,
+  `SUN_upload_time`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`SUN_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='知识库文件';
+```
+
+### 5.2 SUN_knowledge_chunk — 切分后的文本片段
+
+```sql
+CREATE TABLE `SUN_knowledge_chunk` (
+  `SUN_id`        INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `SUN_file_id`   INT UNSIGNED NOT NULL,
+  `SUN_idx`       INT UNSIGNED NOT NULL DEFAULT 0,
+  `SUN_content`   MEDIUMTEXT   NOT NULL,
+  `SUN_tokens`    INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`SUN_id`),
+  KEY `SUN_idx_chunk_file` (`SUN_file_id`),
+  CONSTRAINT `SUN_fk_chunk_file` FOREIGN KEY (`SUN_file_id`)
+    REFERENCES `SUN_knowledge_file` (`SUN_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='知识库片段';
+```
+
+### 5.3 重建 SQL
+
+```sql
+DROP TABLE IF EXISTS `SUN_knowledge_chunk`;
+DROP TABLE IF EXISTS `SUN_knowledge_file`;
+-- 然后执行 5.1 和 5.2 的 CREATE TABLE
+```
+
+### 5.4 重建脚本
+
+```bash
+cd backend && node init/SUN_initKnowledge.js
+```
+
+> 种子文件（2 个 .txt，共 13 个 chunk）通过 `POST /api/knowledge/upload` 上传入库，未以 INSERT 形式写入数据库脚本；重建时调用接口即可。
+
+**修改时间：** 2026-11-23 16:30

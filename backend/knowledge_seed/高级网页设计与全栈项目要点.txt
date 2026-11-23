@@ -1,0 +1,69 @@
+# 高级网页设计与全栈项目要点
+
+## 1. 前端技术栈
+
+高级网页设计课程使用原生 HTML5、CSS3 和 JavaScript（ES6+），**不允许**使用任何第三方框架、CDN 链接或模板引擎。这样做的目的是让学生完整理解 DOM、BOM、事件循环、异步调用、Fetch API 等浏览器底层概念。
+
+HTML5 的语义化标签（header、nav、main、section、footer、article、aside）是页面结构的基础。CSS3 的 Flexbox 和 Grid 布局用于实现响应式界面，媒体查询 @media (min-width: 1024px) 是适配不同屏幕尺寸的标准做法。CSS 变量（--SUN-accent、--SUN-line 等）让主题色值在整个项目中保持统一，修改一处即可全局生效。
+
+JavaScript 负责页面交互：DOM 查询（document.getElementById、document.querySelector）、事件监听（addEventListener）、异步请求（fetch + async/await）、模板拼接（insertAdjacentHTML）等。建议把每个页面的 JS 逻辑独立成一个文件，通过 IIFE（立即执行函数表达式）封装，避免全局污染。
+
+## 2. 后端 Node.js + Express
+
+Express 是 Node.js 生态中最流行的 Web 框架。一个标准的 Express 项目结构：
+
+app.js 是入口文件，负责创建 express() 实例、配置中间件（cors、express.json、express.static）、注册路由、监听端口。routes/ 目录按功能拆分路由模块（newsRoutes、galleryRoutes 等），每个路由模块是一个 express.Router() 实例，通过 SUN_router.use('/news', SUN_newsRoutes) 挂到总路由上。controllers/ 目录放业务逻辑函数，models/ 目录放数据访问层（对 MySQL 的查询封装），config/ 目录放数据库连接配置。
+
+中间件的执行顺序很重要：cors 必须在所有路由之前注册，跨域才能生效；express.json 的 limit 要根据实际需要设置，默认 1mb 对于大文件上传不够用；express.static 托管前端目录后，直接访问根路径就会返回 index.html，不需要额外写 res.sendFile。
+
+## 3. MySQL 数据库设计
+
+本项目使用 MySQL 8.0，字符集 utf8mb4（支持 emoji）。设计原则：
+
+表名、字段名一律以 SUN_ 开头，和项目命名规范保持一致。每张表至少有一个自增主键 SUN_id。时间字段用 DATETIME DEFAULT CURRENT_TIMESTAMP，更新时间可以加上 ON UPDATE CURRENT_TIMESTAMP。外键约束（FOREIGN KEY ... ON DELETE CASCADE）保证级联删除，避免孤儿数据。示例：SUN_chat_message 表通过 SUN_session_id 外键关联 SUN_chat_session，删除会话时对应的消息自动清空。
+
+测试数据要求每张表至少 8 条有业务意义的真实内容。不允许空数据或占位数据。
+
+## 4. 前后端分离的接口约定
+
+所有后端接口统一以 /api/ 为前缀。统一响应格式：{ code: 0, msg: "提示信息", data: { ... } }。code=0 表示成功，非 0 表示失败。错误码建议按模块分段（1xxx 数据库、2xxx 新闻、5xxx AI 对话等），便于前端定位问题。
+
+跨域处理：在 Express 里用 cors({ origin: '*' }) 允许所有来源的跨域请求。这是开发阶段的简化做法，生产环境应该白名单化。
+
+## 5. 前端调试方法
+
+浏览器 F12 开发者工具是最强大的调试武器。Console 面板查看 console.log / console.error 输出的请求和响应数据；Network 面板查看每个 HTTP 请求的状态码、耗时、请求头、响应体；Sources 面板可以给 JS 代码打断点，单步执行查看变量值；Application 面板查看 localStorage / sessionStorage / Cookie / Service Worker 等。
+
+本项目所有的请求响应数据都会通过 console.log 打印到浏览器控制台，这不仅方便调试，也是实验指导书要求的"证据留存"：报告里需要截图展示浏览器控制台打印的发送给大模型的数据和接收到的数据。
+
+## 6. 后端终端日志取证
+
+后端代码里对每次发给大模型的请求体和收到的响应体，都要用固定格式打印到终端：
+
+========== [发给大模型] ==========
+{完整的 JSON 请求体}
+==================================
+
+========== [模型返回] ==========
+{完整的 JSON 响应体}
+==================================
+
+这种固定的分隔线格式方便截图时辨认，也方便老师批阅时快速定位。
+
+## 7. 项目命名与注释规范
+
+所有 CSS 类名、JS 变量名、JS 函数名、数据库表名、数据库字段名一律以 SUN_ 开头。每个文件头部必须有注释块：姓名、学号、创建时间、本次使用的大模型名称。API Key、数据库密码等敏感信息只出现在 backend/.env 中，绝不允许硬编码在源码里或提交到 Git。
+
+SUN_prompt.md 记录每次向 AI 发出的开发指令；SUN_interface.md 记录接口文档；SUN_database.md 记录建表 SQL 和测试数据 INSERT。三份文件都采取追加写入模式，不允许覆盖已有内容。仅凭 SUN_database.md 应该能在一台新机器上完整重建数据库。
+
+## 8. 响应式与无障碍
+
+CSS 里要写媒体查询（@media (max-width: 639px)）让页面在手机上也能正常浏览。颜色对比度要满足 WCAG AA 标准。交互元素要有 aria-label 等无障碍属性。键盘导航要完整：Tab 键能遍历所有可聚焦元素，Enter 能触发按钮，Esc 能关闭弹窗。
+
+## 9. 性能与工程化建议
+
+图片用 WebP 或 AVIF 格式；字体子集化；JS 模块按需加载。npm install 时加 --no-audit --no-fund 可以减少输出噪音。cnpm 比 npm 在国内网络下速度快 3-5 倍。启动后端用 npm start 或 node app.js 二选一。
+
+## 10. 实验提交要求
+
+实验课后需要提交：LLM 应用设计项目报告、源码压缩包、数据库重建脚本、README.md。源码要完整可运行，README 要写清楚环境要求、启动步骤、功能清单。数据库脚本（SUN_database.md）要能在新机器上直接执行成功。截图至少四张：浏览器聊天界面（至少 3 轮对话）、后端终端（发给大模型 + 模型返回两段）、F12 控制台（发送 + 接收数据）、数据库表内容（SUN_chat_session + SUN_chat_message SELECT 结果）。

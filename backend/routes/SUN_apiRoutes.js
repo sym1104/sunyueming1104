@@ -8,6 +8,8 @@ const SUN_router = express.Router();
 const SUN_databaseRoutes = require('./SUN_databaseRoutes');
 const SUN_newsRoutes = require('./SUN_newsRoutes');
 const SUN_galleryRoutes = require('./SUN_galleryRoutes');
+const SUN_chatRoutes = require('./SUN_chatRoutes');
+const SUN_knowledgeRoutes = require('./SUN_knowledgeRoutes');
 
 // GET /api —— 接口索引，便于课堂演示与自查
 SUN_router.get('/', (req, res) => {
@@ -23,7 +25,12 @@ SUN_router.get('/', (req, res) => {
         { method: 'GET', path: '/api/news', desc: '科技新闻列表' },
         { method: 'GET', path: '/api/news/:id', desc: '科技新闻详情' },
         { method: 'GET', path: '/api/gallery', desc: '图文列表' },
-        { method: 'GET', path: '/api/gallery/:id', desc: '图文详情' }
+        { method: 'GET', path: '/api/gallery/:id', desc: '图文详情' },
+        { method: 'POST', path: '/api/chat', desc: 'AI 对话（DeepSeek-V4-Flash, SiliconFlow）' },
+        { method: 'POST', path: '/api/knowledge/upload', desc: '知识库文件上传（doc/docx/ppt/pptx/pdf/txt）' },
+        { method: 'GET',  path: '/api/knowledge/files', desc: '知识库文件列表' },
+        { method: 'DELETE', path: '/api/knowledge/files/:id', desc: '删除知识库文件' },
+        { method: 'POST', path: '/api/knowledge/ask', desc: '基于知识库的 RAG 问答' }
       ]
     }
   });
@@ -32,5 +39,7 @@ SUN_router.get('/', (req, res) => {
 SUN_router.use('/database', SUN_databaseRoutes);
 SUN_router.use('/news', SUN_newsRoutes);
 SUN_router.use('/gallery', SUN_galleryRoutes);
+SUN_router.use('/chat', SUN_chatRoutes);
+SUN_router.use('/knowledge', SUN_knowledgeRoutes);
 
 module.exports = SUN_router;

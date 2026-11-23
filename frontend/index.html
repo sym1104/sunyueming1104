@@ -31,6 +31,8 @@
         <a class="SUN_topnav-link" href="database.html">数据库测试</a>
         <a class="SUN_topnav-link" href="news.html">科技新闻</a>
         <a class="SUN_topnav-link" href="gallery.html">图文列表</a>
+        <a class="SUN_topnav-link" href="chat.html">AI 对话</a>
+        <a class="SUN_topnav-link" href="knowledge.html">知识库 RAG</a>
       </nav>
       <span class="SUN_student-chip">姓名 <b>孙跃铭</b> · 学号 <b>24001011104</b></span>
     </div>
@@ -132,6 +134,28 @@
           <p class="SUN_nav-desc">8 条科技主题图文存于 SUN_gallery 表，本地图片配合简介与标签，同样展示接口与数据内容。</p>
           <div class="SUN_nav-foot">
             <span class="SUN_nav-api">GET /api/gallery</span>
+            <span class="SUN_nav-arrow">进入 →</span>
+          </div>
+        </a>
+
+        <!-- 04 AI 对话 -->
+        <a class="SUN_nav-card" href="chat.html">
+          <span class="SUN_nav-index">04</span>
+          <h3 class="SUN_nav-title">AI 对话</h3>
+          <p class="SUN_nav-desc">通过 Express 代理 SiliconFlow 的 DeepSeek-V4-Flash 接口，多轮对话上下文管理；前端控制台打印请求/响应原始数据。</p>
+          <div class="SUN_nav-foot">
+            <span class="SUN_nav-api">POST /api/chat</span>
+            <span class="SUN_nav-arrow">进入 →</span>
+          </div>
+        </a>
+
+        <!-- 05 知识库 RAG -->
+        <a class="SUN_nav-card" href="knowledge.html">
+          <span class="SUN_nav-index">05</span>
+          <h3 class="SUN_nav-title">知识库 RAG</h3>
+          <p class="SUN_nav-desc">上传 doc/docx/ppt/pptx/pdf/txt 等文件，后端解析分块入库；问答时用 BM25 检索 Top-K 片段拼入 system prompt，模型回答带来源标注 [1][2]。</p>
+          <div class="SUN_nav-foot">
+            <span class="SUN_nav-api">POST /api/knowledge/ask</span>
             <span class="SUN_nav-arrow">进入 →</span>
           </div>
         </a>

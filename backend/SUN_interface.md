@@ -245,3 +245,191 @@
 **异常：** `id` 非数字返回 `code=2`；查无记录返回 `code=3`。
 
 **修改时间：** 2026-11-19 11:12
+
+---
+
+## POST /api/chat（AI 对话 · SiliconFlow DeepSeek-V4-Flash）
+
+**接口路径：** `/api/chat`
+**HTTP 方法：** POST
+**请求参数（JSON Body，二选一）：**
+
+方式 A — 传入 messages 数组（多轮对话推荐）：
+
+```json
+{
+  "messages": [
+    { "role": "system", "content": "你是一个有用的助手，回答简明、有条理。" },
+    { "role": "user", "content": "你好" },
+    { "role": "assistant", "content": "你好！我可以帮你解答问题。" },
+    { "role": "user", "content": "再问一个……" }
+  ]
+}
+```
+
+方式 B — 传入 question 字符串（后端自动补默认 system prompt）：
+
+```json
+{
+  "question": "你好，请用一句话介绍你自己"
+}
+```
+
+**成功响应：**
+
+```json
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "SUN_reply": "你好！我是一个乐于助人的AI助手……😊",
+    "SUN_model": "deepseek-ai/DeepSeek-V4-Flash",
+    "SUN_usage": { "prompt_tokens": 22, "completion_tokens": 105, "total_tokens": 127 },
+    "SUN_request": {
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "messages": [
+        { "role": "system", "content": "你是一个有用的助手，回答简明、有条理。" },
+        { "role": "user", "content": "你好，请用一句话介绍你自己" }
+      ],
+      "stream": false
+    },
+    "SUN_response": {
+      "id": "01a2073c8164484cd8b5407e5196dafd",
+      "object": "chat.completion",
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "choices": [{
+        "index": 0,
+        "message": { "role": "assistant", "content": "你好！……" },
+        "finish_reason": "stop"
+      }],
+      "usage": { "prompt_tokens": 22, "completion_tokens": 105, "total_tokens": 127 }
+    }
+  }
+}
+```
+
+**失败响应（HTTP 200，code 非 0）：**
+- `code=4001` 缺少 messages 或 question 参数
+- `code=5001` 大模型服务未配置（.env 缺少 SILICONFLOW_*）
+- `code=5002` 大模型返回错误
+- `code=5099` 服务器内部异常
+
+**后端终端打印（取证截图）：**
+
+```
+========== [发给大模型] ==========
+{ model, messages, stream }   ← 后端转发给 SiliconFlow 的完整 JSON
+==================================
+========== [模型返回] ==========
+{ id, choices, usage, ... }   ← SiliconFlow 返回的完整 chat.completion
+==================================
+```
+
+**前端控制台三层日志：**
+
+```
+[AI 聊天] 发送给大模型的数据（前端 payload = messages 数组）：
+[AI 聊天] 后端拼好后发送给大模型的数据（data.SUN_request）：
+[AI 聊天] 从大模型接收到的原始响应（data.SUN_response）：
+```
+
+**大模型配置（backend/.env）：**
+
+```
+SILICONFLOW_API_KEY=sk-*****
+SILICONFLOW_BASE_URL=https://api.siliconflow.cn/v1/chat/completions
+SILICONFLOW_MODEL=deepseek-ai/DeepSeek-V4-Flash
+```
+
+**修改时间：** 2026-11-23 15:10
+
+---
+
+## 6. 知识库 RAG 接口（2026-11-23 16:30）
+
+### 6.1 POST /api/knowledge/upload — 文件上传 + 解析 + 分块
+
+**请求：** `Content-Type: multipart/form-data`，字段名 `file`。
+支持格式：.txt .md .csv .json .rtf .docx .pptx .xlsx .pdf .epub .doc .ppt；大小 ≤ 20MB。
+
+**成功响应：**
+
+```json
+{
+  "code": 0, "msg": "上传成功",
+  "data": { "SUN_id": 1, "SUN_name": "hash.txt", "SUN_ext": ".txt",
+            "SUN_size": 4945, "SUN_chunk_count": 5 }
+}
+```
+
+### 6.2 GET /api/knowledge/files — 文件列表
+
+**响应：**
+
+```json
+{ "code": 0, "msg": "ok",
+  "data": { "SUN_total": 2,
+    "SUN_list": [
+      { "SUN_id": 2, "SUN_name": "timestamp_hash.txt",
+        "SUN_original_name": "高级网页设计与全栈项目要点.txt",
+        "SUN_ext": ".txt", "SUN_size": 6157, "SUN_chunk_count": 8,
+        "SUN_upload_time": "2026-11-23T07:17:58.000Z" }
+    ]
+  }
+}
+```
+
+### 6.3 DELETE /api/knowledge/files/:id — 删除文件（级联删 chunk）
+
+**响应：** `{ "code": 0, "msg": "删除成功", "data": { "SUN_id": 1 } }`
+
+### 6.4 POST /api/knowledge/ask — 基于知识库的 RAG 问答
+
+**请求：** `{ "question": "大模型应用的四层架构是什么？" }`
+
+**响应：**
+
+```json
+{
+  "code": 0, "msg": "ok",
+  "data": {
+    "SUN_reply": "根据知识库片段[1]，大语言模型应用一般可以拆成四层：……",
+    "SUN_model": "deepseek-ai/DeepSeek-V4-Flash",
+    "SUN_usage": { "prompt_tokens": 1200, "completion_tokens": 300, "total_tokens": 1500 },
+    "SUN_sources": [
+      { "SUN_file_id": 1, "SUN_name": "大模型应用工程实践手册.txt", "SUN_ext": ".txt" },
+      { "SUN_file_id": 2, "SUN_name": "高级网页设计与全栈项目要点.txt", "SUN_ext": ".txt" }
+    ],
+    "SUN_payload": {
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "messages": [
+        { "role": "system", "content": "你是一个基于知识库的智能问答助手……===== 知识库片段 =====\n[1] 来源：大模型应用工程实践手册.txt……" },
+        { "role": "user", "content": "大模型应用的四层架构是什么？" }
+      ],
+      "stream": false
+    },
+    "SUN_response": { "id": "01a2...", "choices": [...], "usage": {...} }
+  }
+}
+```
+
+**后端终端打印（取证截图）：**
+
+```
+========== [发给大模型（RAG）] ==========
+{ messages: [ { role:'system', content:'你是……===== 知识库片段 =====...' }, ... ] }
+=========================================
+========== [模型返回（RAG）] ==========
+{ id, choices, usage, ... }
+========================================
+```
+
+**前端控制台三层日志：**
+
+```
+[RAG 问答] 发送给大模型的数据（前端 payload）：{ question }
+[RAG 问答] 后端拼接好后发送给大模型的数据（data.SUN_payload）：{ model, messages }
+[RAG 问答] 从大模型接收到的原始响应（data.SUN_response）：{ choices, usage }
+```
+
+**修改时间：** 2026-11-23 16:30

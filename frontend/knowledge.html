@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--
+  姓名：孙跃铭 | 学号：24001011104 | 时间：2026-11-23 | 大模型：DeepSeek-V4-Flash
+  页面说明：知识库 RAG 问答页。
+    - 文件上传（支持 .txt/.md/.csv/.docx/.pptx/.xlsx/.pdf/.epub/.doc/.ppt）
+    - 文件列表与删除
+    - 基于知识库的问答（BM25 检索 Top-K → 拼 system prompt → 调大模型）
+    - 前端控制台三层日志：[RAG 上传] / [RAG 问答 发送给大模型] / [RAG 问答 从大模型接收]
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>知识库 RAG · 科技视界 TechScope</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1622'/%3E%3Cpath d='M7 20L13 10L19 22L25 12' stroke='%233fd8bf' stroke-width='2.4' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/SUN_common.css">
+</head>
+<body>
+
+  <header class="SUN_topbar">
+    <div class="SUN_shell SUN_topbar-inner">
+      <a class="SUN_brand" href="index.html">
+        <span class="SUN_brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 16L8 7L13 18L19 8" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        <span>
+          <span class="SUN_brand-name">科技视界 TechScope</span><br>
+          <span class="SUN_brand-sub">Full-Stack Course Project</span>
+        </span>
+      </a>
+      <nav class="SUN_topnav" aria-label="页面导航">
+        <a class="SUN_topnav-link" href="index.html">首页</a>
+        <a class="SUN_topnav-link" href="database.html">数据库测试</a>
+        <a class="SUN_topnav-link" href="news.html">科技新闻</a>
+        <a class="SUN_topnav-link" href="gallery.html">图文列表</a>
+        <a class="SUN_topnav-link" href="chat.html">AI 对话</a>
+        <a class="SUN_topnav-link SUN_active" href="knowledge.html">知识库 RAG</a>
+      </nav>
+      <span class="SUN_student-chip">姓名 <b>孙跃铭</b> · 学号 <b>24001011104</b></span>
+    </div>
+  </header>
+
+  <main>
+    <div class="SUN_page-head">
+      <div class="SUN_shell">
+        <span class="SUN_kicker">Knowledge Base · RAG</span>
+        <h1 class="SUN_page-title">知识库 RAG 问答</h1>
+        <p class="SUN_page-desc">
+          基于本地文档的检索增强生成（Retrieval-Augmented Generation）。上传文件后由服务端
+          解析并按 500 字分块（60 字 overlap），提问时先用 BM25 检索最相关的 Top-K 片段拼入
+          system prompt，再交给 DeepSeek-V4-Flash 生成带来源标注的回答。
+          F12 打开控制台可观察三层日志：上传数据 / 发送给大模型的数据 / 从大模型接收到的数据。
+        </p>
+
+        <div class="SUN_api-bar">
+          <span class="SUN_method SUN_method-post">POST</span>
+          <span class="SUN_api-url">/api/knowledge/upload · /api/knowledge/ask</span>
+          <span class="SUN_api-hint">支持 doc / docx / ppt / pptx / pdf / txt / md / csv</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="SUN_shell SUN_rag-layout">
+
+      <!-- 左：上传 + 文件列表 -->
+      <aside class="SUN_rag-side">
+        <section class="SUN_panel SUN_upload-panel">
+          <div class="SUN_panel-head"><h3>① 上传知识库文件</h3><span class="SUN_panel-hint">支持 .txt .md .docx .pptx .xlsx .pdf .epub .doc .ppt</span></div>
+          <div class="SUN_panel-body">
+            <label class="SUN_upload-drop" for="SUN_ragFile">
+              <input type="file" id="SUN_ragFile" accept=".txt,.md,.csv,.json,.rtf,.docx,.pptx,.xlsx,.pdf,.epub,.doc,.ppt" hidden>
+              <div class="SUN_upload-icon">↑</div>
+              <div>点击选择文件（≤ 20MB）</div>
+              <div class="SUN_upload-sub">或拖放到此处</div>
+            </label>
+            <div class="SUN_upload-status" id="SUN_ragUploadStatus">等待选择文件……</div>
+          </div>
+        </section>
+
+        <section class="SUN_panel">
+          <div class="SUN_panel-head"><h3>② 已上传文件</h3><span class="SUN_panel-hint" id="SUN_ragFileCount">0 个文件</span></div>
+          <div class="SUN_panel-body SUN_file-list" id="SUN_ragFileList">
+            <div class="SUN_empty">点击上传第一个知识库文件。</div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- 右：问答 -->
+      <section class="SUN_rag-main">
+        <div class="SUN_chat-main" style="height:auto;min-height:520px;">
+          <div class="SUN_chat-head">
+            <div class="SUN_chat-head-left">
+              <h2 class="SUN_chat-title">③ 知识库问答区</h2>
+              <span class="SUN_chat-status" id="SUN_ragStatus">就绪</span>
+            </div>
+            <span class="SUN_api-hint">BM25 Top-K = 8 · 引用来源用 [1][2] 标注</span>
+          </div>
+
+          <div class="SUN_chat-log" id="SUN_ragLog">
+            <div class="SUN_empty">先上传文件让知识库不为空，然后输入问题开始 RAG 问答。</div>
+          </div>
+
+          <div class="SUN_chat-suggest">
+            <button class="SUN_chip" type="button" data-SUN-prompt="大模型应用的四层架构分别是什么？">四层架构</button>
+            <button class="SUN_chip" type="button" data-SUN-prompt="RAG 的基本流程是什么？">RAG 流程</button>
+            <button class="SUN_chip" type="button" data-SUN-prompt="前端为什么不能把 API Key 写在代码里？">API Key 安全</button>
+            <button class="SUN_chip" type="button" data-SUN-prompt="Express 中间件的执行顺序应该怎么安排？">中间件顺序</button>
+          </div>
+
+          <form class="SUN_chat-composer" id="SUN_ragForm">
+            <textarea class="SUN_chat-input" id="SUN_ragInput" rows="3" maxlength="2000"
+              placeholder="问一个关于你知识库内容的问题…… Enter 发送，Shift+Enter 换行"></textarea>
+            <div class="SUN_chat-actions">
+              <span class="SUN_chat-count" id="SUN_ragCount">0 / 2000</span>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="SUN_btn SUN_btn-ghost" id="SUN_ragClear">清空对话</button>
+                <button type="submit" class="SUN_btn SUN_btn-primary" id="SUN_ragSend">发送</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <section class="SUN_data-panel" style="margin-top:8px;">
+          <details class="SUN_details">
+            <summary>发送给大模型的数据（后端拼接好的 system prompt + knowledge chunks）<span>POST /api/knowledge/ask · data.SUN_payload</span></summary>
+            <div class="SUN_details-body">
+              <pre class="SUN_code" id="SUN_ragRequest">等待发送……</pre>
+            </div>
+          </details>
+          <details class="SUN_details">
+            <summary>从大模型接收到的数据（SiliconFlow 原始 chat.completion）<span>data.SUN_response</span></summary>
+            <div class="SUN_details-body">
+              <pre class="SUN_code" id="SUN_ragResponse">等待响应……</pre>
+            </div>
+          </details>
+        </section>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="SUN_footer">
+    <div class="SUN_shell SUN_footer-inner">
+      <span>© 2026 <b>孙跃铭</b> · 学号 <b>24001011104</b> · 科技视界 TechScope</span>
+      <span>知识库 RAG · POST /api/knowledge/ask · DeepSeek-V4-Flash</span>
+    </div>
+  </footer>
+
+  <script src="js/SUN_common.js"></script>
+  <script src="js/SUN_knowledge.js"></script>
+</body>
+</html>

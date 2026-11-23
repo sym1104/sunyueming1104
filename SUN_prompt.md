@@ -117,3 +117,25 @@ run.bat、database.html、科技新闻列表页、图文列表页，并补齐 SU
 **大模型名称：** 豆包大模型（Doubao）
 
 **说明：** 技能创建于 `.user_skills/github-push`，主脚本 `scripts/SUN_push.ps1`；执行顺序为检查敏感文件 → commit → SSH 优先 / HTTPS 回退 → push（含重试）→ 远程 HEAD 校验。
+---
+
+## 2026-11-23 15:10 | 大模型：DeepSeek-V4.1-Flash
+
+**时间：** 2026-11-23 15:10
+**提示词全文：**
+`
+创建AI聊天页面。
+Api-key：sk-venmhlwesjjnhyjvrbkiccekwrqsricaufjpuzxkdrwhsigm(自己的key)
+curl --request POST --url https://api.siliconflow.cn/v1/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer YOUR_API_KEY" -d '{"model":"deepseek-ai/DeepSeek-V4-Flash","messages":[{"role":"system","content":"你是一个有用的助手"},{"role":"user","content":"你好，请介绍一下你自己"}]}'
+在控制台里输出发送给大模型的数据和从大模型接收到的数据。
+`
+**实现摘要：** 新建后端路由 backend/routes/SUN_chatRoutes.js 代理 SiliconFlow chat/completions（API Key 存 backend/.env，变量 SILICONFLOW_API_KEY / SILICONFLOW_BASE_URL / SILICONFLOW_MODEL）；SUN_apiRoutes.js 挂载 /chat 路由；新建前端 chat.html + js/SUN_chat.js + CSS 追加块；前端三层 console.log（前端 payload / 后端 SUN_request / 后端 SUN_response），后端终端固定打印两段 ====== [发给大模型] ====== + ====== [模型返回] ======。POST /api/chat 支持 question 或 messages 两种入参。
+
+## 2026-11-23 16:30 | 大模型：DeepSeek-V4.1-Flash
+
+**时间：** 2026-11-23 16:30
+**提示词全文：**
+```
+完成知识库文件上传功能，构建2个知识库文件，完成基于知识库的问答，支持doc和docx，ppt，完成知识库管理（RAG）：基于本地文件（如 PDF/TXT）上传、解析，构建专属自动客服或问答系统，包括知识库文件上传模块。在控制台输出发送给大模型的数据和接受自大模型的数据。
+```
+**实现摘要：** 新建数据库表 SUN_knowledge_file / SUN_knowledge_chunk（SUN_initKnowledge.js 初始化）；新建 backend/services/SUN_knowledgeService.js（officeparser 解析 docx/pptx/pdf，word-extractor 解析 doc，pdf-parse 解析 pdf，txt 直接读；固定 500 字分块 + 60 overlap；简易 BM25 关键词打分 Top-K=8）；新建 backend/routes/SUN_knowledgeRoutes.js 四条路由（upload / files / files/:id DELETE / ask）；SUN_apiRoutes 挂载 /knowledge；新建前端 knowledge.html + js/SUN_knowledge.js + CSS 追加块；控制台三层日志 [RAG 上传] / [RAG 问答 发送给大模型] / [RAG 问答 从大模型接收]；后端终端固定两段 [发给大模型（RAG）] / [模型返回（RAG）]。种子文件 2 个 .txt 存于 backend/knowledge_seed/，上传后入库 13 个 chunk。

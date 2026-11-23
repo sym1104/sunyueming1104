@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!--
+  姓名：孙跃铭 | 学号：24001011104 | 时间：2026-11-23 | 大模型：DeepSeek-V4-Flash
+  页面说明：AI 对话页。通过 POST /api/chat 与 SiliconFlow 的 DeepSeek-V4-Flash 对话。
+            前端控制台打印三层日志：发送给大模型的数据 / 后端拼好的 messages / 从大模型接收到的原始响应。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 对话 · 科技视界 TechScope</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1622'/%3E%3Cpath d='M7 20L13 10L19 22L25 12' stroke='%233fd8bf' stroke-width='2.4' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/SUN_common.css">
+</head>
+<body>
+
+  <header class="SUN_topbar">
+    <div class="SUN_shell SUN_topbar-inner">
+      <a class="SUN_brand" href="index.html">
+        <span class="SUN_brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 16L8 7L13 18L19 8" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        <span>
+          <span class="SUN_brand-name">科技视界 TechScope</span><br>
+          <span class="SUN_brand-sub">Full-Stack Course Project</span>
+        </span>
+      </a>
+      <nav class="SUN_topnav" aria-label="页面导航">
+        <a class="SUN_topnav-link" href="index.html">首页</a>
+        <a class="SUN_topnav-link" href="database.html">数据库测试</a>
+        <a class="SUN_topnav-link" href="news.html">科技新闻</a>
+        <a class="SUN_topnav-link" href="gallery.html">图文列表</a>
+        <a class="SUN_topnav-link SUN_active" href="chat.html">AI 对话</a>
+      </nav>
+      <span class="SUN_student-chip">姓名 <b>孙跃铭</b> · 学号 <b>24001011104</b></span>
+    </div>
+  </header>
+
+  <main>
+    <div class="SUN_page-head">
+      <div class="SUN_shell">
+        <span class="SUN_kicker">AI Chat · SiliconFlow</span>
+        <h1 class="SUN_page-title">AI 对话（DeepSeek-V4-Flash）</h1>
+        <p class="SUN_page-desc">
+          直接通过 Node.js 后端代理调用硅基流动的 DeepSeek-V4-Flash 模型，
+          API Key 仅保存在 <code>backend/.env</code>；前端控制台会打印"发送给大模型的数据"和"从大模型接收到的数据"，
+          后端终端同时打印请求体和响应体，满足实验指导书的取证要求。
+        </p>
+
+        <div class="SUN_api-bar">
+          <span class="SUN_method SUN_method-post">POST</span>
+          <span class="SUN_api-url" id="SUN_chatApiUrl">http://localhost:8325/api/chat</span>
+          <button class="SUN_copy-btn" type="button" data-SUN-copy="http://localhost:8325/api/chat">复制接口</button>
+          <span class="SUN_api-hint">多轮上下文 · 服务端代理</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="SUN_shell SUN_chat-layout">
+      <section class="SUN_chat-main">
+        <div class="SUN_chat-head">
+          <div class="SUN_chat-head-left">
+            <h2 class="SUN_chat-title">对话区</h2>
+            <span class="SUN_chat-status" id="SUN_chatStatus">就绪</span>
+          </div>
+          <span class="SUN_api-hint">模型：deepseek-ai/DeepSeek-V4-Flash</span>
+        </div>
+
+        <!-- 消息气泡区 -->
+        <div class="SUN_chat-log" id="SUN_chatLog">
+          <div class="SUN_empty" id="SUN_chatEmpty">
+            输入问题开始对话。建议先 F12 打开浏览器控制台，观察"发送给大模型的数据"和"从大模型接收到的数据"两段日志。
+          </div>
+        </div>
+
+        <!-- 建议 chips -->
+        <div class="SUN_chat-suggest">
+          <button class="SUN_chip" type="button" data-SUN-prompt="你好，请简单介绍一下你自己。">打招呼</button>
+          <button class="SUN_chip" type="button" data-SUN-prompt="请用三句话解释什么是大语言模型。">什么是大模型</button>
+          <button class="SUN_chip" type="button" data-SUN-prompt="给我一段 JavaScript，实现数组去重并保持顺序。">JS 数组去重</button>
+          <button class="SUN_chip" type="button" data-SUN-prompt="写一首短诗，主题是人工智能与自然。">AI 写诗</button>
+        </div>
+
+        <!-- 输入区 -->
+        <form class="SUN_chat-composer" id="SUN_chatForm">
+          <textarea
+            class="SUN_chat-input"
+            id="SUN_chatInput"
+            rows="3"
+            maxlength="2000"
+            placeholder="在这里输入问题…… Enter 发送，Shift+Enter 换行"
+          ></textarea>
+          <div class="SUN_chat-actions">
+            <span class="SUN_chat-count" id="SUN_chatCount">0 / 2000</span>
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="SUN_btn SUN_btn-ghost" id="SUN_chatClear">清空对话</button>
+              <button type="submit" class="SUN_btn SUN_btn-primary" id="SUN_chatSend">发送</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- JSON 数据面板 -->
+      <section class="SUN_data-panel" style="margin-top:8px;">
+        <details class="SUN_details">
+          <summary>发送给大模型的数据（messages）<span>POST /api/chat · 后端拼好后发给 SiliconFlow</span></summary>
+          <div class="SUN_details-body">
+            <pre class="SUN_code" id="SUN_chatRequest">等待发送……</pre>
+          </div>
+        </details>
+        <details class="SUN_details">
+          <summary>从大模型接收到的数据（原始响应）<span>choices[0].message.content + usage</span></summary>
+          <div class="SUN_details-body">
+            <pre class="SUN_code" id="SUN_chatResponse">等待响应……</pre>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <footer class="SUN_footer">
+    <div class="SUN_shell SUN_footer-inner">
+      <span>© 2026 <b>孙跃铭</b> · 学号 <b>24001011104</b> · 科技视界 TechScope</span>
+      <span>AI 对话接口：<b>/api/chat</b> · SiliconFlow DeepSeek-V4-Flash</span>
+    </div>
+  </footer>
+
+  <script src="js/SUN_common.js"></script>
+  <script src="js/SUN_chat.js"></script>
+</body>
+</html>
